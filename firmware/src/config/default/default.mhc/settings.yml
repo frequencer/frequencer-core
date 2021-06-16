@@ -1,0 +1,14 @@
+configName: default
+folderName: frequencer-core
+format_version: v1.0
+frameworkPath: ..\..\Harmony3
+processor: PIC32MZ1024EFM064
+projectName: frequencer-core
+settings:
+  PackageFilter: bootloader;bootloader_apps_usb;bsp;core;core_apps_pic32cm_mc00;core_apps_pic32mz_ef;crypto;csp;csp_apps_pic32cm_mc00;csp_apps_pic32mz_ef;net;quick_docs;usb;usb_apps_device
+  FORCE_OPTIMIZATION: 'false'
+  GENERATE_BACKUP: 'true'
+  TRUSTZONE: 'false'
+  CMSISPath: .\dev_packs\arm\CMSIS\5.7.0
+  MERGE_STRATEGY: USER_ALL
+  DFPPath: .\dev_packs\Microchip\PIC32MZ-EF_DFP\1.3.58\atdf\PIC32MZ1024EFM064.atdf

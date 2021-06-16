@@ -1,0 +1,32 @@
+# .gitignore for mplab x projects
+# Patrick Marcus
+# Marcus Engineering LLC
+# Copyright 2017 Marcus Engineering LLC
+#
+# v1.0.0 initial release this is new after revert and deleted files, it should show after merge to master
+#
+*.d
+*.pre
+*.p1
+*.lst
+*.sym
+*.obj
+*.o
+*.sdb
+*.obj.dmp
+html/
+latex/
+nbproject/private/
+nbproject/Package-*.bash
+build/
+nbbuild/
+dist/
+nbdist/
+nbactions.xml
+nb-configuration.xml
+funclist
+nbproject/Makefile-*
+nbproject/Package-*
+disassembly/
+*.map
+.generated_files/
