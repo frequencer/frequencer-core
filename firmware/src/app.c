@@ -110,7 +110,7 @@ void app_task (void)
 
 			if (SYS_STATUS_READY == console_status)
 			{
-				CPRINTF("Press S2 to get started!")
+				CPRINT("Press S2 to get started!")
 				next_state = APPS_WAIT_USER_READY;
 			}
 			else if (SYS_STATUS_ERROR == console_status)
@@ -151,7 +151,7 @@ void app_task (void)
 			}
 			else
 			{
-				CPRINTF("PLL not ready. Press S2 to retry.");
+				CPRINT("PLL not ready. Press S2 to retry.");
 				next_state = APPS_WAIT_USER_READY;
 			}
 

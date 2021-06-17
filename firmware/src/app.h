@@ -25,6 +25,7 @@
 #define APP_H
 
 
+#define CPRINT(format) {SYS_CONSOLE_Print(sysObj.sysConsole0, format);}
 #define CPRINTF(format, ...) {SYS_CONSOLE_Print(sysObj.sysConsole0, format, __VA_ARGS__);}
 
 #define APP_START_STATE APPS_QUERY_PLL
