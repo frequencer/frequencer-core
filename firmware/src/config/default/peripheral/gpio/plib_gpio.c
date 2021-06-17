@@ -72,6 +72,8 @@ void GPIO_Initialize ( void )
     IEC3SET = _IEC3_CNBIE_MASK;
 
     /* PORTC Initialization */
+    LATC = 0x0; /* Initial Latch Value */
+    TRISCCLR = 0x2000; /* Direction Control */
 
     /* PORTD Initialization */
 

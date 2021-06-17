@@ -610,7 +610,7 @@
         <property key="memories.programmemory.ranges" value="1d000000-1d0fffff"/>
         <property key="memories.rww" value="true"/>
         <property key="programmerToGoFilePath"
-                  value="C:/Users/jrowley/git/frequencer-core/firmware/frequencer-core.X/debug/default/frequencer-core_ptg"/>
+                  value="C:/Users/jrowley/Documents/git/frequencer-core/firmware/frequencer-core.X/debug/default/frequencer-core_ptg"/>
         <property key="programoptions.donoteraseauxmem" value="false"/>
         <property key="programoptions.eraseb4program" value="true"/>
         <property key="programoptions.pgmentry.voltage" value="low"/>

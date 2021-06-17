@@ -217,6 +217,15 @@
 #define DBG_RX_Get()               ((PORTD >> 0) & 0x1)
 #define DBG_RX_PIN                  GPIO_PIN_RD0
 
+/*** Macros for PLL_RST pin ***/
+#define PLL_RST_Set()               (LATCSET = (1<<13))
+#define PLL_RST_Clear()             (LATCCLR = (1<<13))
+#define PLL_RST_Toggle()            (LATCINV= (1<<13))
+#define PLL_RST_OutputEnable()      (TRISCCLR = (1<<13))
+#define PLL_RST_InputEnable()       (TRISCSET = (1<<13))
+#define PLL_RST_Get()               ((PORTC >> 13) & 0x1)
+#define PLL_RST_PIN                  GPIO_PIN_RC13
+
 /*** Macros for REF_PIC pin ***/
 #define REF_PIC_Get()               ((PORTC >> 14) & 0x1)
 #define REF_PIC_PIN                  GPIO_PIN_RC14

@@ -106,44 +106,7 @@ void SPI2_Initialize ( void )
 
 bool SPI2_TransferSetup (SPI_TRANSFER_SETUP* setup, uint32_t spiSourceClock )
 {
-    uint32_t t_brg;
-    uint32_t baudHigh;
-    uint32_t baudLow;
-    uint32_t errorHigh;
-    uint32_t errorLow;
-
-    if ((setup == NULL) || (setup->clockFrequency == 0))
-    {
-        return false;
-    }
-
-    if(spiSourceClock == 0)
-    {
-        // Use Master Clock Frequency set in GUI
-        spiSourceClock = 48000000;
-    }
-
-    t_brg = (((spiSourceClock / (setup->clockFrequency)) / 2u) - 1u);
-    baudHigh = spiSourceClock / (2u * (t_brg + 1u));
-    baudLow = spiSourceClock / (2u * (t_brg + 2u));
-    errorHigh = baudHigh - setup->clockFrequency;
-    errorLow = setup->clockFrequency - baudLow;
-
-    if (errorHigh > errorLow)
-    {
-        t_brg++;
-    }
-
-    if(t_brg > 511)
-    {
-        return false;
-    }
-
-    SPI2BRG = t_brg;
-    SPI2CON = (SPI2CON & (~(_SPI2CON_MODE16_MASK | _SPI2CON_MODE32_MASK | _SPI2CON_CKP_MASK | _SPI2CON_CKE_MASK))) |
-                            (setup->clockPolarity | setup->clockPhase | setup->dataBits);
-
-    return true;
+    return false;
 }
 
 bool SPI2_Write(void* pTransmitData, size_t txSize)
@@ -162,139 +125,91 @@ bool SPI2_WriteRead(void* pTransmitData, size_t txSize, void* pReceiveData, size
     size_t rxCount = 0;
     size_t dummySize = 0;
     size_t dummyRxCntr = 0;
-    size_t receivedData;
-    bool isSuccess = false;
+    uint32_t rxData, txData;
 
     /* Verify the request */
-    if (((txSize > 0) && (pTransmitData != NULL)) || ((rxSize > 0) && (pReceiveData != NULL)))
+    if (((txSize <= 0) || (NULL == pTransmitData)) && ((rxSize <= 0) || (NULL == pReceiveData)))
     {
-        if (pTransmitData == NULL)
-        {
-            txSize = 0;
-        }
-        if (pReceiveData == NULL)
-        {
-            rxSize = 0;
-        }
+		return false;
+	}
 
-        /* Clear the receive overflow error if any */
-        SPI2STATCLR = _SPI2STAT_SPIROV_MASK;
+	if (pTransmitData == NULL)
+	{
+		txSize = 0;
+	}
+	if (pReceiveData == NULL)
+	{
+		rxSize = 0;
+	}
 
-        /* Flush out any unread data in SPI read buffer from the previous transfer */
-        while ((bool)(SPI2STAT & _SPI2STAT_SPIRBE_MASK) == false)
-        {
-            receivedData = SPI2BUF;
-        }
+	/* Clear the receive overflow error if any */
+	SPI2STATCLR = _SPI2STAT_SPIROV_MASK;
 
-        if (rxSize > txSize)
-        {
-            dummySize = rxSize - txSize;
-        }
+	/* Flush out any unread data in SPI read buffer from the previous transfer */
+	while ((bool)(SPI2STAT & _SPI2STAT_SPIRBE_MASK) == false)
+	{
+		rxData = SPI2BUF;
+	}
 
-        /* If dataBit size is 32 bits */
-        if (_SPI2CON_MODE32_MASK == (SPI2CON & _SPI2CON_MODE32_MASK))
-        {
-            rxSize >>= 2;
-            txSize >>= 2;
-            dummySize >>= 2;
-        }
-        /* If dataBit size is 16 bits */
-        else if (_SPI2CON_MODE16_MASK == (SPI2CON & _SPI2CON_MODE16_MASK))
-        {
-            rxSize >>= 1;
-            txSize >>= 1;
-            dummySize >>= 1;
-        }
+	if (rxSize > txSize)
+	{
+		dummySize = rxSize - txSize;
+	}
 
-        /* Make sure transmit buffer is empty */
-        while((bool)(SPI2STAT & _SPI2STAT_SPITBE_MASK) == false);
+	/* If dataBit size is 32 bits (not supported) */
+	if (_SPI2CON_MODE32_MASK == (SPI2CON & _SPI2CON_MODE32_MASK))
+	{
+		return false;
+	}
+	/* If dataBit size is 16 bits (not supported) */
+	else if (_SPI2CON_MODE16_MASK == (SPI2CON & _SPI2CON_MODE16_MASK))
+	{
+		return false;
+	}
 
-        while ((txCount != txSize) || (dummySize != 0))
-        {
-            if (txCount != txSize)
-            {
-                if((_SPI2CON_MODE32_MASK) == (SPI2CON & (_SPI2CON_MODE32_MASK)))
-                {
-                    SPI2BUF = ((uint32_t*)pTransmitData)[txCount++];
-                }
-                else if((_SPI2CON_MODE16_MASK) == (SPI2CON & (_SPI2CON_MODE16_MASK)))
-                {
-                    SPI2BUF = ((uint16_t*)pTransmitData)[txCount++];
-                }
-                else
-                {
-                    SPI2BUF = ((uint8_t*)pTransmitData)[txCount++];
-                }
-            }
-            else if (dummySize > 0)
-            {
-                SPI2BUF = 0xff;
-                dummySize--;
-            }
+	/* Make sure transmit buffer is empty */
+	while((bool)(SPI2STAT & _SPI2STAT_SPITBE_MASK) == false);
 
-            if (rxCount == rxSize)
-            {
-                /* If inside this if condition, then it means that txSize > rxSize and all RX bytes are received */
+	while ((txCount < txSize) || (dummySize > 0))
+	{
 
-                /* For transmit only request, wait for buffer to become empty */
-                while((bool)(SPI2STAT & _SPI2STAT_SPITBE_MASK) == false);
+		if (txCount < txSize)
+		{
+			txData = ((uint8_t*)pTransmitData)[txCount];
+			txCount++;
+		}
+		else
+		{
+			txData = 0xFF;
+			dummySize--;
+		}
 
-                /* Read until the receive buffer is not empty */
-                while ((bool)(SPI2STAT & _SPI2STAT_SPIRBE_MASK) == false)
-                {
-                    receivedData = SPI2BUF;
-                    dummyRxCntr++;
-                }
-            }
-            else
-            {
-                /* If data is read, wait for the Receiver Data the data to become available */
-                while((SPI2STAT & _SPI2STAT_SPIRBE_MASK) == _SPI2STAT_SPIRBE_MASK);
+		while((bool)(SPI2STAT & _SPI2STAT_SPITBE_MASK) == false);
+		SPI2BUF = txData;
+		while((SPI2STAT & _SPI2STAT_SPIRBE_MASK) == _SPI2STAT_SPIRBE_MASK);
+		rxData = SPI2BUF;
 
-                /* We have data waiting in the SPI buffer */
-                receivedData = SPI2BUF;
+		if (rxCount < rxSize)
+		{
+			((uint8_t*)pReceiveData)[rxCount++] = rxData;
+		}
+	}
 
-                if (rxCount < rxSize)
-                {
-                    if((_SPI2CON_MODE32_MASK) == (SPI2CON & (_SPI2CON_MODE32_MASK)))
-                    {
-                        ((uint32_t*)pReceiveData)[rxCount++]  = receivedData;
-                    }
-                    else if((_SPI2CON_MODE16_MASK) == (SPI2CON & (_SPI2CON_MODE16_MASK)))
-                    {
-                        ((uint16_t*)pReceiveData)[rxCount++]  = receivedData;
-                    }
-                    else
-                    {
-                        ((uint8_t*)pReceiveData)[rxCount++]  = receivedData;
-                    }
-                }
-            }
-        }
+	/* Make sure no data is pending in the shift register */
+	while ((bool)((SPI2STAT & _SPI2STAT_SRMT_MASK) == false));
 
-        /* Make sure no data is pending in the shift register */
-        while ((bool)((SPI2STAT & _SPI2STAT_SRMT_MASK) == false));
+	/* Make sure for every character transmitted a character is also received back.
+	 * If this is not done, we may prematurely exit this routine with the last bit still being
+	 * transmitted out. As a result, the application may prematurely deselect the CS line and also
+	 * the next request can receive last character of previous request as its first character.
+	 */
+	if (txSize > rxSize)
+	{
+		if (dummyRxCntr != (txSize - rxSize))
+		{
+			return false;
+		}
+	}
 
-        /* Make sure for every character transmitted a character is also received back.
-         * If this is not done, we may prematurely exit this routine with the last bit still being
-         * transmitted out. As a result, the application may prematurely deselect the CS line and also
-         * the next request can receive last character of previous request as its first character.
-         */
-        if (txSize > rxSize)
-        {
-            while (dummyRxCntr != (txSize - rxSize))
-            {
-                /* Wait for all the RX bytes to be received. */
-                while ((bool)(SPI2STAT & _SPI2STAT_SPIRBE_MASK) == false)
-                {
-                    receivedData = SPI2BUF;
-                    dummyRxCntr++;
-                }
-            }
-        }
-
-        isSuccess = true;
-    }
-
-    return isSuccess;
+    return true;
 }

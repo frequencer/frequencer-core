@@ -33,6 +33,7 @@ static unsigned int message_counter;
 
 
 void sw1_callback (GPIO_PIN pin, uintptr_t context);
+void sw2_callback (GPIO_PIN pin, uintptr_t context);
 void led_timer_callback (uintptr_t context);
 
 
@@ -49,14 +50,21 @@ void app_init (void)
 
 	message_counter = 0;
 
-	bool result = GPIO_PinInterruptCallbackRegister(
+	bool gpio_result = GPIO_PinInterruptCallbackRegister(
 		SW1_PIN,
 		sw1_callback,
 		NULL
 	);
 	SW1_InterruptEnable();
 
-	if (false == result)
+	gpio_result &= GPIO_PinInterruptCallbackRegister(
+		SW2_PIN,
+		sw2_callback,
+		NULL
+	);
+	SW2_InterruptEnable();
+
+	if (false == gpio_result)
 	{
 		HANG_HERE();
 	}
@@ -85,6 +93,10 @@ void app_init (void)
 	{
 		HANG_HERE();
 	}
+
+	PLL_RST_Clear();
+	CORETIMER_DelayMs(2);
+	PLL_RST_Set();
 }
 
 // Main app task. Call as often as possible.
@@ -94,12 +106,16 @@ void app_task (void)
 	{
 		case APPS_INIT:
 		{
-			bool appInitialized = true;
+			SYS_STATUS console_status = SYS_CONSOLE_Status(sysObj.sysConsole0);
 
-			if (appInitialized)
+			if (SYS_STATUS_READY == console_status)
 			{
-				LED2_Clear();
-				next_state = APPS_IDLE;
+				CPRINTF("Press S2 to get started!")
+				next_state = APPS_WAIT_USER_READY;
+			}
+			else if (SYS_STATUS_ERROR == console_status)
+			{
+				HANG_HERE();
 			}
 			else
 			{
@@ -109,8 +125,42 @@ void app_task (void)
 			break;
 		}
 
+		case APPS_WAIT_USER_READY:
+		{
+			// Exit via SW2 ISR.
+			next_state = APPS_WAIT_USER_READY;
+
+			break;
+		}
+
+		case APPS_QUERY_PLL:
+		{
+			uint8_t spi_out[2] = { 0x80, 0xFF };
+			uint8_t spi_in[2] = { 0 };
+
+			if (!SPI2_WriteRead((void *)spi_out, 2, (void *)spi_in, 2))
+			{
+				HANG_HERE();
+			}
+
+			CPRINTF("PLL ID: 0x%02X (should be 0x89)\r\n", spi_in[1]);
+
+			if (spi_in[1] & 0x80)
+			{
+				next_state = APPS_IDLE;
+			}
+			else
+			{
+				CPRINTF("PLL not ready. Press S2 to retry.");
+				next_state = APPS_WAIT_USER_READY;
+			}
+
+			break;
+		}
+
 		case APPS_IDLE:
 		{
+			// Exit via SW1 ISR.
 			next_state = APPS_IDLE;
 
 			break;
@@ -118,7 +168,7 @@ void app_task (void)
 
 		case APPS_SEND_MESSAGE:
 		{
-			SYS_CONSOLE_Print(console_handle, "Hello World %d\r\n", message_counter);
+			CPRINTF("Hello World %d\r\n", message_counter);
 
 			message_counter++;
 			next_state = APPS_IDLE;
@@ -159,7 +209,29 @@ sw1_callback (GPIO_PIN pin, uintptr_t context)
 
 	if (!SW1_Get())
 	{
-		isr_state = APPS_SEND_MESSAGE;
+		if (APPS_IDLE == state)
+		{
+			isr_state = APPS_SEND_MESSAGE;
+		}
+	}
+}
+
+// SW2 pushbutton callback. Starts main app execution.
+void
+sw2_callback (GPIO_PIN pin, uintptr_t context)
+{
+	if (SW2_PIN != pin)
+	{
+		HANG_HERE();
+	}
+
+	if (!SW2_Get())
+	{
+		if (APPS_WAIT_USER_READY == state)
+		{
+			LED2_Clear();
+			isr_state = APP_START_STATE;
+		}
 	}
 }
 
