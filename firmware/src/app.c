@@ -16,6 +16,7 @@
 
 #include "definitions.h"
 #include "drivers/hang_here.h"
+#include "drivers/zl30159.h"
 
 #include "app.h"
 
@@ -94,9 +95,7 @@ void app_init (void)
 		HANG_HERE();
 	}
 
-	PLL_RST_Clear();
-	CORETIMER_DelayMs(2);
-	PLL_RST_Set();
+	zl_init();
 }
 
 // Main app task. Call as often as possible.
@@ -110,7 +109,7 @@ void app_task (void)
 
 			if (SYS_STATUS_READY == console_status)
 			{
-				CPRINT("Press S2 to get started!")
+				CPRINT("Press S2 to get started!\r\n")
 				next_state = APPS_WAIT_USER_READY;
 			}
 			else if (SYS_STATUS_ERROR == console_status)
@@ -135,23 +134,17 @@ void app_task (void)
 
 		case APPS_QUERY_PLL:
 		{
-			uint8_t spi_out[2] = { 0x80, 0xFF };
-			uint8_t spi_in[2] = { 0 };
+			zl_value_t id_reg = zl_read_reg(ZL_REG_ID_REG);
 
-			if (!SPI2_WriteRead((void *)spi_out, 2, (void *)spi_in, 2))
-			{
-				HANG_HERE();
-			}
+			CPRINTF("PLL ID: 0x%02X (should be 0x89)\r\n", id_reg.u8);
 
-			CPRINTF("PLL ID: 0x%02X (should be 0x89)\r\n", spi_in[1]);
-
-			if (spi_in[1] & 0x80)
+			if (id_reg.id_reg.ready)
 			{
 				next_state = APPS_IDLE;
 			}
 			else
 			{
-				CPRINT("PLL not ready. Press S2 to retry.");
+				CPRINT("PLL not ready. Press S2 to retry.\r\n");
 				next_state = APPS_WAIT_USER_READY;
 			}
 

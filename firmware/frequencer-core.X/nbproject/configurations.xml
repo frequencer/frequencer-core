@@ -146,6 +146,8 @@
       </logicalFolder>
       <logicalFolder name="f2" displayName="drivers" projectFiles="true">
         <itemPath>../src/drivers/hang_here.h</itemPath>
+        <itemPath>../src/drivers/zl30159.h</itemPath>
+        <itemPath>../src/drivers/zl30159_defs.h</itemPath>
       </logicalFolder>
       <itemPath>../src/app.h</itemPath>
     </logicalFolder>
@@ -245,6 +247,8 @@
         </logicalFolder>
       </logicalFolder>
       <logicalFolder name="f2" displayName="drivers" projectFiles="true">
+        <itemPath>../src/drivers/zl30159.c</itemPath>
+        <itemPath>../src/drivers/zl30159_defs.c</itemPath>
       </logicalFolder>
       <itemPath>../src/app.c</itemPath>
       <itemPath>../src/main.c</itemPath>

@@ -124,7 +124,6 @@ bool SPI2_WriteRead(void* pTransmitData, size_t txSize, void* pReceiveData, size
     size_t txCount = 0;
     size_t rxCount = 0;
     size_t dummySize = 0;
-    size_t dummyRxCntr = 0;
     uint32_t rxData, txData;
 
     /* Verify the request */
@@ -197,19 +196,6 @@ bool SPI2_WriteRead(void* pTransmitData, size_t txSize, void* pReceiveData, size
 
 	/* Make sure no data is pending in the shift register */
 	while ((bool)((SPI2STAT & _SPI2STAT_SRMT_MASK) == false));
-
-	/* Make sure for every character transmitted a character is also received back.
-	 * If this is not done, we may prematurely exit this routine with the last bit still being
-	 * transmitted out. As a result, the application may prematurely deselect the CS line and also
-	 * the next request can receive last character of previous request as its first character.
-	 */
-	if (txSize > rxSize)
-	{
-		if (dummyRxCntr != (txSize - rxSize))
-		{
-			return false;
-		}
-	}
 
     return true;
 }
