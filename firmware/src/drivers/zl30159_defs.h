@@ -287,6 +287,9 @@ extern const zl_register_t zl_reg_pfm_mask_ho;
 extern const zl_register_t zl_reg_pfm_mask_ref_fail;
 extern const zl_register_t zl_reg_pfm_range_ref;
 
+extern const zl_register_t * const zl_all_regs[];
+extern const unsigned int zl_all_regs_count;
+
 
 // Register data definitions.
 

@@ -15,6 +15,7 @@
 */
 
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
 #include "definitions.h"
 #include "hang_here.h"
@@ -135,6 +136,23 @@ zl_set_sticky_r_lock (bool sticky)
 	{
 		HANG_HERE();
 	}
+}
+
+
+const zl_register_t *
+zl_find_reg (uint8_t address)
+{
+	unsigned int i;
+
+	for (i = 0; i < zl_all_regs_count; i++)
+	{
+		if (zl_all_regs[i]->address == address)
+		{
+			return zl_all_regs[i];
+		}
+	}
+
+	return NULL;
 }
 
 
