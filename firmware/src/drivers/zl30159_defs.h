@@ -1,21 +1,21 @@
 /*
  * ZL30159 Register Definitions
- * 
+ *
  * @file
  *   zl30159_defs.h
- * 
+ *
  * @date
  *   2021-06-17
- * 
+ *
  * @par
  *   Copyright 2021 Frequencer Team
- * 
+ *
  * @brief
  *   Register definitions for the ZL30159.
-*/
+ */
 
 #ifndef ZL30159_DEFS_H
-#define	ZL30159_DEFS_H
+#define ZL30159_DEFS_H
 
 
 #include <stdbool.h>
@@ -196,7 +196,7 @@
 #define ZL_DEF_PFM_ACCEPT_52PPM_REJECT_67_5PPM (0x7U)
 
 
-#ifdef	__cplusplus
+#ifdef  __cplusplus
 extern "C" {
 #endif
 
@@ -287,7 +287,7 @@ extern const zl_register_t zl_reg_pfm_mask_ho;
 extern const zl_register_t zl_reg_pfm_mask_ref_fail;
 extern const zl_register_t zl_reg_pfm_range_ref;
 
-extern const zl_register_t * const zl_all_regs[];
+extern const zl_register_t* const zl_all_regs[];
 extern const unsigned int zl_all_regs_count;
 
 
@@ -303,7 +303,7 @@ typedef struct
 {
 	unsigned int chip_id : 5;
 	unsigned int chip_revision : 2;
-	unsigned int ready: 1;
+	unsigned int ready : 1;
 }
 zl_rt_id_reg_t;
 
@@ -327,7 +327,7 @@ typedef struct
 {
 	unsigned int pre_divider_enable : 1;
 	unsigned int _ : 3;
-	unsigned int diff_input_enable: 1;
+	unsigned int diff_input_enable : 1;
 }
 zl_rt_ref_config_t;
 
@@ -416,7 +416,7 @@ zl_rt_phase_shift_t;
 typedef struct
 {
 	unsigned int table_address : 7;
-	unsigned int con_or_stat_sel: 1;
+	unsigned int con_or_stat_sel : 1;
 }
 zl_rt_gpio_function_t;
 
@@ -424,7 +424,7 @@ typedef struct
 {
 	unsigned int holdover_storage_delay : 5;
 	unsigned int _ : 1;
-	unsigned int input_edge_sensitivity: 2;
+	unsigned int input_edge_sensitivity : 2;
 }
 zl_rt_dpll_ctrl2_t;
 
@@ -464,8 +464,8 @@ typedef union
 zl_value_t;
 
 
-#ifdef	__cplusplus
+#ifdef  __cplusplus
 }
 #endif
 
-#endif	/* ZL30159_DEFS_H */
+#endif /* ZL30159_DEFS_H */

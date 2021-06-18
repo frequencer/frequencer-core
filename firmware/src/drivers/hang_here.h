@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   hang_here.h
  * Author: jrowley
  *
@@ -10,19 +10,19 @@
 #include <stdbool.h>
 
 #ifndef HANG_HERE_H
-#define	HANG_HERE_H
+#define HANG_HERE_H
 
-#ifdef	__cplusplus
+#ifdef  __cplusplus
 extern "C" {
 #endif
 
 
-#define HANG_HERE() { while (true) { LED3_Toggle(); CORETIMER_DelayMs(50); }}
+#define HANG_HERE() { while (true){ LED3_Toggle(); CORETIMER_DelayMs(50); }\
+}
 
 
-#ifdef	__cplusplus
+#ifdef  __cplusplus
 }
 #endif
 
-#endif	/* HANG_HERE_H */
-
+#endif /* HANG_HERE_H */

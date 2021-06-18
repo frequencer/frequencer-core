@@ -1,18 +1,18 @@
 /*******************************************************************************
-  MPLAB Harmony Application Source File
-
-  Company:
-	Microchip Technology Inc.
-
-  File Name:
-	app.c
-
-  Summary:
-	This file contains the source code for the MPLAB Harmony application.
-
-  Description:
-	Wow, it's the main file
- *******************************************************************************/
+*  MPLAB Harmony Application Source File
+*
+*  Company:
+*   Microchip Technology Inc.
+*
+*  File Name:
+*   app.c
+*
+*  Summary:
+*   This file contains the source code for the MPLAB Harmony application.
+*
+*  Description:
+*   Wow, it's the main file
+*******************************************************************************/
 
 #include "definitions.h"
 #include "drivers/hang_here.h"
@@ -41,7 +41,8 @@ void led_timer_callback (uintptr_t context);
 /// Main Functions
 
 // Initialize application. Call once before calling app_task.
-void app_init (void)
+void
+app_init (void)
 {
 	LED2_Set();
 
@@ -56,6 +57,7 @@ void app_init (void)
 		sw1_callback,
 		NULL
 	);
+
 	SW1_InterruptEnable();
 
 	gpio_result &= GPIO_PinInterruptCallbackRegister(
@@ -99,7 +101,8 @@ void app_init (void)
 }
 
 // Main app task. Call as often as possible.
-void app_task (void)
+void
+app_task (void)
 {
 	switch (state)
 	{

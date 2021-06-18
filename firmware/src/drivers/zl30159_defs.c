@@ -1,18 +1,18 @@
 /*
  * ZL30159 Register Definitions
- * 
+ *
  * @file
  *   zl30159_defs.c
- * 
+ *
  * @date
  *   2021-06-17
- * 
+ *
  * @par
  *   Copyright 2021 Frequencer Team
- * 
+ *
  * @brief
  *   Register definitions for the ZL30159.
-*/
+ */
 
 #include "zl30159_defs.h"
 
@@ -381,7 +381,7 @@ const zl_register_t zl_reg_pfm_range_ref = {
 	.default_ = 0x33,
 };
 
-const zl_register_t * const zl_all_regs[] = {
+const zl_register_t* const zl_all_regs[] = {
 	ZL_REG_ID_REG,
 	ZL_REG_REF_FAIL_ISR_STATUS,
 	ZL_REG_DPLL_ISR_STATUS,
@@ -436,4 +436,4 @@ const zl_register_t * const zl_all_regs[] = {
 	ZL_REG_PFM_RANGE_REF
 };
 
-const unsigned int zl_all_regs_count = sizeof(zl_all_regs) / sizeof(zl_register_t *);
+const unsigned int zl_all_regs_count = sizeof(zl_all_regs) / sizeof(zl_register_t*);

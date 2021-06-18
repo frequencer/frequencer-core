@@ -1,0 +1,5 @@
+/firmware/src/**/*.c
+/firmware/src/**/*.h
+!/firmware/src/config/**
+!/firmware/src/packs/**
+!/firmware/src/system.h

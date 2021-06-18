@@ -1,22 +1,22 @@
 /*******************************************************************************
-  MPLAB Harmony Application Header File
+*  MPLAB Harmony Application Header File
+*
+*  Company:
+*   Microchip Technology Inc.
+*
+*  File Name:
+*   app.h
+*
+*  Summary:
+*   This header file provides prototypes and definitions for the application.
+*
+*  Description:
+*   Good grief they litter this thing with block comments
+*******************************************************************************/
 
-  Company:
-	Microchip Technology Inc.
-
-  File Name:
-	app.h
-
-  Summary:
-	This header file provides prototypes and definitions for the application.
-
-  Description:
-	Good grief they litter this thing with block comments
- *******************************************************************************/
-
-#include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include "configuration.h"
 
@@ -25,8 +25,8 @@
 #define APP_H
 
 
-#define CPRINT(format) {SYS_CONSOLE_Print(sysObj.sysConsole0, format);}
-#define CPRINTF(format, ...) {SYS_CONSOLE_Print(sysObj.sysConsole0, format, __VA_ARGS__);}
+#define CPRINT(format) { SYS_CONSOLE_Print(sysObj.sysConsole0, format); }
+#define CPRINTF(format, ...) { SYS_CONSOLE_Print(sysObj.sysConsole0, format, __VA_ARGS__); }
 
 #define APP_START_STATE APPS_QUERY_PLL
 
