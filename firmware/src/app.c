@@ -15,6 +15,7 @@
 *******************************************************************************/
 
 #include "definitions.h"
+#include "drivers/con_modbus.h"
 #include "drivers/hang_here.h"
 #include "drivers/zl30159.h"
 
@@ -97,6 +98,7 @@ app_init (void)
 		HANG_HERE();
 	}
 
+	cmb_init();
 	zl_init();
 }
 
@@ -175,8 +177,6 @@ app_task (void)
 		{
 			LED1_Toggle();
 
-			printf("CTC %u\r\n", _CP0_GET_COUNT());
-
 			break;
 		}
 
@@ -197,6 +197,12 @@ app_task (void)
 	{
 		state = next_state;
 		next_state = APPS_NONE;
+	}
+
+	if (APPS_INIT != state)
+	{
+		// General tasks for after init.
+		cmb_task();
 	}
 }
 

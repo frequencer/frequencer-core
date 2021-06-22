@@ -28,6 +28,7 @@
         <spellchecker-wordlist xmlns="http://www.netbeans.org/ns/spellchecker-wordlist/1">
             <word>app</word>
             <word>Frequencer</word>
+            <word>Modbus</word>
         </spellchecker-wordlist>
     </configuration>
 </project>
