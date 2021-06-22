@@ -112,7 +112,7 @@ app_task (void)
 
 			if (SYS_STATUS_READY == console_status)
 			{
-				CPRINT("Press S2 to get started!\r\n")
+				printf("Press S2 to get started!\r\n");
 				next_state = APPS_WAIT_USER_READY;
 			}
 			else if (SYS_STATUS_ERROR == console_status)
@@ -139,7 +139,7 @@ app_task (void)
 		{
 			zl_value_t id_reg = zl_read_reg(ZL_REG_ID_REG);
 
-			CPRINTF("PLL ID: 0x%02X (should be 0x89)\r\n", id_reg.u8);
+			printf("PLL ID: 0x%02X (should be 0x89)\r\n", id_reg.u8);
 
 			if (id_reg.id_reg.ready)
 			{
@@ -147,7 +147,7 @@ app_task (void)
 			}
 			else
 			{
-				CPRINT("PLL not ready. Press S2 to retry.\r\n");
+				printf("PLL not ready. Press S2 to retry.\r\n");
 				next_state = APPS_WAIT_USER_READY;
 			}
 
@@ -162,12 +162,20 @@ app_task (void)
 			break;
 		}
 
-		case APPS_SEND_MESSAGE:
+		case APPS_INT_SEND_MESSAGE:
 		{
-			CPRINTF("Hello World %d\r\n", message_counter);
+			printf("Hello World %d\r\n", message_counter);
 
 			message_counter++;
-			next_state = APPS_IDLE;
+
+			break;
+		}
+
+		case APPS_INT_TOGGLE_LED:
+		{
+			LED1_Toggle();
+
+			printf("CTC %u\r\n", _CP0_GET_COUNT());
 
 			break;
 		}
@@ -175,6 +183,7 @@ app_task (void)
 		default:
 		{
 			HANG_HERE();
+
 			break;
 		}
 	}
@@ -205,10 +214,7 @@ sw1_callback (GPIO_PIN pin, uintptr_t context)
 
 	if (!SW1_Get())
 	{
-		if (APPS_IDLE == state)
-		{
-			isr_state = APPS_SEND_MESSAGE;
-		}
+		isr_state = APPS_INT_SEND_MESSAGE;
 	}
 }
 
@@ -235,5 +241,5 @@ sw2_callback (GPIO_PIN pin, uintptr_t context)
 void
 led_timer_callback (uintptr_t context)
 {
-	LED1_Toggle();
+	isr_state = APPS_INT_TOGGLE_LED;
 }
