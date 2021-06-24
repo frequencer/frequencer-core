@@ -15,9 +15,9 @@
 *******************************************************************************/
 
 #include "definitions.h"
-#include "drivers/con_modbus.h"
 #include "drivers/hang_here.h"
 #include "drivers/zl30159.h"
+#include "modbus/modbus.h"
 
 #include "app.h"
 
@@ -98,7 +98,7 @@ app_init (void)
 		HANG_HERE();
 	}
 
-	cmb_init();
+	modbus_init();
 	zl_init();
 }
 
@@ -202,7 +202,7 @@ app_task (void)
 	if (APPS_INIT != state)
 	{
 		// General tasks for after init.
-		cmb_task();
+		modbus_task();
 	}
 }
 

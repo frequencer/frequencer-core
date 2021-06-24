@@ -148,7 +148,12 @@
         <itemPath>../src/drivers/hang_here.h</itemPath>
         <itemPath>../src/drivers/zl30159.h</itemPath>
         <itemPath>../src/drivers/zl30159_defs.h</itemPath>
-        <itemPath>../src/drivers/con_modbus.h</itemPath>
+      </logicalFolder>
+      <logicalFolder name="f3" displayName="modbus" projectFiles="true">
+        <itemPath>../src/modbus/modbus.h</itemPath>
+        <itemPath>../src/modbus/modbus_con_ascii.h</itemPath>
+        <itemPath>../src/modbus/modbus_pdu.h</itemPath>
+        <itemPath>../src/modbus/modbus_defs.h</itemPath>
       </logicalFolder>
       <itemPath>../src/app.h</itemPath>
     </logicalFolder>
@@ -250,7 +255,11 @@
       <logicalFolder name="f2" displayName="drivers" projectFiles="true">
         <itemPath>../src/drivers/zl30159.c</itemPath>
         <itemPath>../src/drivers/zl30159_defs.c</itemPath>
-        <itemPath>../src/drivers/con_modbus.c</itemPath>
+      </logicalFolder>
+      <logicalFolder name="f3" displayName="modbus" projectFiles="true">
+        <itemPath>../src/modbus/modbus.c</itemPath>
+        <itemPath>../src/modbus/modbus_con_ascii.c</itemPath>
+        <itemPath>../src/modbus/modbus_pdu.c</itemPath>
       </logicalFolder>
       <itemPath>../src/app.c</itemPath>
       <itemPath>../src/main.c</itemPath>
