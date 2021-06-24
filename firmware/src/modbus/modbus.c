@@ -82,6 +82,8 @@ modbus_task (void)
 		run_command();
 		mca_send_reply(&pdu);
 	}
+
+	mca_done();
 }
 
 
@@ -284,6 +286,13 @@ get_handler (mb_reg_data_t* reg_data, mb_handled_regs_t* list)
 	if (reg_data->address > end_address)
 	{
 		mb_debug("Ignoring zero-count request.");
+
+		return NULL;
+	}
+
+	if (reg_data->count > MODBUS_REGS_MULTI_MAX)
+	{
+		mb_debug("Ignoring too big request.");
 
 		return NULL;
 	}

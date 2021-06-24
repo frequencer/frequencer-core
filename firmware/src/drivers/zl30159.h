@@ -33,9 +33,11 @@ void zl_init (void);
 
 zl_value_t zl_read_reg (const zl_register_t* reg);
 zl_value_t zl_read_reg_sticky (const zl_register_t* reg, bool now);
-void zl_write_reg (const zl_register_t* reg, zl_value_t value);
+bool zl_write_reg (const zl_register_t* reg, zl_value_t value);
 
 void zl_set_sticky_r_lock (bool sticky);
+
+const zl_register_t* zl_find_reg (uint8_t address);
 
 
 #ifdef  __cplusplus

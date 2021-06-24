@@ -66,7 +66,10 @@ zl_read_reg_sticky (const zl_register_t* reg, bool now)
 	{
 		zl_value_t clear = { .i32 = 0x00 };
 
-		zl_write_reg(reg, clear);
+		if (!zl_write_reg(reg, clear))
+		{
+			HANG_HERE();
+		}
 
 		CORETIMER_DelayMs(5);
 	}
@@ -92,7 +95,7 @@ zl_read_reg_sticky (const zl_register_t* reg, bool now)
 	return value;
 }
 
-void
+bool
 zl_write_reg (const zl_register_t* reg, zl_value_t value)
 {
 	uint8_t spi_out[5] = { 0 };
@@ -106,7 +109,7 @@ zl_write_reg (const zl_register_t* reg, zl_value_t value)
 
 	if (ZL_RTYPE_READONLY == reg->type)
 	{
-		HANG_HERE();
+		return false;
 	}
 
 	bank_select(reg->address >= ZL_BANK_BOUNDARY);
@@ -121,6 +124,8 @@ zl_write_reg (const zl_register_t* reg, zl_value_t value)
 	{
 		HANG_HERE();
 	}
+
+	return true;
 }
 
 

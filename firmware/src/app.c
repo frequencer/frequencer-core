@@ -22,6 +22,10 @@
 #include "app.h"
 
 
+#define MB_PLL_BASE (0x100U)
+#define MB_PLL_RAW_BASE (0x200U)
+
+
 /// Definitions
 
 static app_states_t state;
@@ -37,8 +41,10 @@ static unsigned int message_counter;
 void sw1_callback (GPIO_PIN pin, uintptr_t context);
 void sw2_callback (GPIO_PIN pin, uintptr_t context);
 void led_timer_callback (uintptr_t context);
-bool modbus_read_callback (mb_reg_data_t* reg_data);
-bool modbus_write_callback (mb_reg_data_t* reg_data);
+bool modbus_read_pll_callback (mb_reg_data_t* reg_data);
+bool modbus_write_pll_callback (mb_reg_data_t* reg_data);
+bool modbus_read_pll_raw_callback (mb_reg_data_t* reg_data);
+bool modbus_write_pll_raw_callback (mb_reg_data_t* reg_data);
 
 
 /// Main Functions
@@ -103,17 +109,40 @@ app_init (void)
 	modbus_init();
 	zl_init();
 
+	// PLL can be accessed via Read Holding Registers (0x03) and Write Multiple
+	// Registers (0x10) Modbus functions in ASCII frame format over USB serial.
+	// Note that we go by ADDRESSES always, not register numbers. If you have
+	// to use a "number" add one to the address.
+	// Also note that ONLY 123 registers can be read/written at once. This is
+	// the Modbus spec... we can probably crank that as high as we want though
+	// without much issue (adjust MODBUS_REGS_MULTI_MAX).
+	// Oh, and the responses aren't going to have the LRC set because I didn't
+	// implement it, so ignore that.
 	modbus_add_reg_handler(
-		0x00,
-		0x10,
+		MB_PLL_BASE,  // The first register address in modbus.
+		0x100,  // The number of contiguous registers starting there.
 		MB_RA_READ,
-		modbus_read_callback
+		modbus_read_pll_callback
 	);
 	modbus_add_reg_handler(
-		0x00,
-		0x10,
+		MB_PLL_BASE,  // You'll need to add this constant to the PLL address.
+		0x100,
 		MB_RA_WRITE,
-		modbus_write_callback
+		modbus_write_pll_callback
+	);
+	// The raw reading/writing really screws with the PLL. Seems the burst mode
+	// can't handle passing over an unimplemented address..?
+	modbus_add_reg_handler(
+		MB_PLL_RAW_BASE,  // Or add this constant to do direct SPI transactions.
+		0x80,
+		MB_RA_READ,
+		modbus_read_pll_raw_callback
+	);
+	modbus_add_reg_handler(
+		MB_PLL_RAW_BASE,
+		0x80,
+		MB_RA_WRITE,
+		modbus_write_pll_raw_callback
 	);
 }
 
@@ -265,66 +294,171 @@ led_timer_callback (uintptr_t context)
 	isr_state = APPS_INT_TOGGLE_LED;
 }
 
-// Test modbus read callback. Prints request data.
+// Read from PLL with automatic bank switching and any other conversion
+// features that are part of the PIC's driver. This will avoid reading addresses
+// that do not correspond to a known register, and also avoid reading registers
+// that can't fully fit in the requested number of bytes.
+// One modbus address = one byte.
 bool
-modbus_read_callback (mb_reg_data_t* reg_data)
+modbus_read_pll_callback (mb_reg_data_t* reg_data)
 {
-	unsigned int i;
-	uint16_t end_address = reg_data->address + reg_data->count - 1;
+	uint16_t cur_addr = reg_data->address - MB_PLL_BASE;
+	uint16_t end_addr = cur_addr + reg_data->count;  // exclusive
+	unsigned int i, offset = 0;
 
-	if (reg_data->address == end_address)
-	{
-		printf("Modbus Read: 0x%04X\r\n", reg_data->address);
-	}
-	else
-	{
-		printf("Modbus Read: 0x%04X - 0x%04X\r\n", reg_data->address, end_address);
-	}
+	printf("Reading PLL registers 0x%02X - 0x%02X.\r\n", cur_addr, end_addr);
 
-	for (i = 0; i < reg_data->count; i++)
+	while (cur_addr < end_addr)
 	{
-		reg_data->data[i] = i + reg_data->address;
+		const zl_register_t* pll_reg = zl_find_reg(cur_addr);
+		zl_value_t value;
+
+		if (NULL == pll_reg)
+		{
+			// No register at this address!
+			reg_data->data[offset] = 0;
+			cur_addr++;
+			offset++;
+			continue;
+		}
+
+		if ((end_addr - cur_addr) < pll_reg->size)
+		{
+			// Requested size less than register size!
+			reg_data->data[offset] = 0;
+			cur_addr++;
+			offset++;
+			continue;
+		}
+
+		value = zl_read_reg(pll_reg);
+
+		// Flip endian back when sending, so byte order is same as on device.
+		for (i = 0; i < pll_reg->size; i++)
+		{
+			reg_data->data[offset + i] = value.raw[(pll_reg->size - 1) - i];
+		}
+
+		cur_addr += pll_reg->size;
+		offset += pll_reg->size;
 	}
 
 	return true;
 }
 
-// Test modbus read callback. Prints request data.
+// Write to PLL with automatic bank switching and any other conversion
+// features that are part of the PIC's driver. This will avoid writing addresses
+// that do not correspond to a known register, and also avoid writing registers
+// that don't have the full number of bytes provided. It may also reject data
+// that fails certain range checks.
+// One modbus address = one byte. Modbus register values above 255 will be
+// rejected.
 bool
-modbus_write_callback (mb_reg_data_t* reg_data)
+modbus_write_pll_callback (mb_reg_data_t* reg_data)
 {
-	uint16_t end_address = reg_data->address + reg_data->count - 1;
+	uint16_t cur_addr = reg_data->address - MB_PLL_BASE;
+	uint16_t end_addr = cur_addr + reg_data->count;  // exclusive
+	unsigned int i, offset = 0;
 
-	if (reg_data->address == end_address)
+	printf("Writing PLL registers 0x%02X - 0x%02X.\r\n", cur_addr, end_addr - 1);
+
+	// Check no data more than 8 bits
+	for (i = 0; i < reg_data->count; i++)
 	{
-		printf("Modbus Write: 0x%04X = 0x%04X\r\n", reg_data->address, reg_data->data[0]);
-	}
-	else
-	{
-		unsigned int i;
-
-		printf("Modbus Write: 0x%04X - 0x%04X = { ", reg_data->address, end_address);
-
-		for (i = 0; i < reg_data->count; i++)
+		if (reg_data->data[i] > 0xFF)
 		{
-			if (i > 0)
-			{
-				printf(", ");
-			}
+			return false;
+		}
+	}
 
-			printf("0x%04X", reg_data->data[i]);
+	while (cur_addr < end_addr)
+	{
+		const zl_register_t* pll_reg = zl_find_reg(cur_addr);
+		zl_value_t value;
+
+		if (NULL == pll_reg)
+		{
+			// No register at this address!
+			cur_addr++;
+			offset++;
+			continue;
 		}
 
-		printf(" }\r\n");
+		if ((end_addr - cur_addr) < pll_reg->size)
+		{
+			// Requested size less than register size!
+			return false;
+		}
+
+		// Flip endian when writing, because driver will flip it too.
+		for (i = 0; i < pll_reg->size; i++)
+		{
+			value.raw[(pll_reg->size - 1) - i] = reg_data->data[offset + i];
+		}
+
+		if (!zl_write_reg(pll_reg, value))
+		{
+			return false;
+		}
+
+		cur_addr += pll_reg->size;
+		offset += pll_reg->size;
 	}
 
-	if (reg_data->data[0] > 0xFF)
+	return true;
+}
+
+// Read from PLL over SPI directly, bypassing PIC's driver.
+// One modbus address = one byte.
+bool
+modbus_read_pll_raw_callback (mb_reg_data_t* reg_data)
+{
+	uint8_t spi_out[1] = { 0 };
+	uint8_t spi_in[MODBUS_REGS_MULTI_MAX + 1] = { 0 };
+	uint8_t bytes = reg_data->count + 1;
+	uint8_t i;
+
+	spi_out[0] = ((reg_data->address - MB_PLL_RAW_BASE) & 0x7F) | 0x80;
+
+	if (!SPI2_WriteRead((void*)spi_out, 1U, (void*)spi_in, bytes))
 	{
-		// Example of failure on data with more than 8 bits.
-		return false;
+		HANG_HERE();
 	}
-	else
+
+	for (i = 0; i < reg_data->count; i++)
 	{
-		return true;
+		reg_data->data[i] = spi_in[i + 1];
 	}
+
+	return true;
+}
+
+// Write to PLL over SPI directly, bypassing PIC's driver.
+// One modbus address = one byte. Modbus register values above 255 will be
+// rejected.
+bool
+modbus_write_pll_raw_callback (mb_reg_data_t* reg_data)
+{
+	uint8_t spi_out[MODBUS_REGS_MULTI_MAX + 1] = { 0 };
+	uint8_t bytes = reg_data->count + 1;
+	uint8_t i;
+
+	spi_out[0] = ((reg_data->address - MB_PLL_RAW_BASE) & 0x7F);
+
+	for (i = 0; i < reg_data->count; i++)
+	{
+		if (reg_data->data[i] > 0xFF)
+		{
+			return false;
+		}
+
+		spi_out[i + 1] = reg_data->data[i];
+	}
+
+	if (!SPI2_WriteRead((void*)spi_out, bytes, NULL, 0U))
+	{
+		HANG_HERE();
+	}
+
+	return true;
 }

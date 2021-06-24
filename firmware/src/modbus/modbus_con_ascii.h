@@ -45,6 +45,7 @@ void mca_task (void);
 
 modbus_pdu_t mca_parse_adu (void);
 void mca_send_reply (modbus_pdu_t* pdu);
+void mca_done (void);
 
 void mb_debug (const char* fmt, ...);
 

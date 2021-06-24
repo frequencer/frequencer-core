@@ -122,8 +122,6 @@ mca_parse_adu (void)
 		return PDU_EMPTY;
 	}
 
-	ascii_state = AS_IDLE;
-
 	if (adu.length < 3)
 	{
 		mb_debug("Ignoring too-short frame.");
@@ -205,6 +203,17 @@ mca_send_reply (modbus_pdu_t* pdu)
 	con_write_safe("\r\n");
 
 	adu.length = 0;
+}
+
+// Call this function when you are done with the result of mca_parse_adu.
+// Call it even if mca_parse_adu gave an invalid result.
+void
+mca_done (void)
+{
+	if (AS_READY == ascii_state)
+	{
+		ascii_state = AS_IDLE;
+	}
 }
 
 
