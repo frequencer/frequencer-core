@@ -18,9 +18,14 @@
 #define MODBUS_DEFS_H
 
 
+#include <stdint.h>
+
+
 #define MODBUS_ADDRESS (0U)
 
 #define MODBUS_EXCEPTION_OFFSET (0x80U)
+
+#define MODBUS_REGS_MULTI_MAX (123U)
 
 
 #ifdef  __cplusplus

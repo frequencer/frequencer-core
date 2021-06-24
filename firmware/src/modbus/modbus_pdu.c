@@ -26,7 +26,7 @@
 /// Functions to decompose function data into usable form.
 
 bool
-pdu_parse_read_regs (modbus_pdu_t* pdu, pdu_reg_data_t* reg_data)
+pdu_parse_read_regs (modbus_pdu_t* pdu, mb_reg_data_t* reg_data)
 {
 	uint16_t address, count;
 
@@ -52,7 +52,7 @@ pdu_parse_read_regs (modbus_pdu_t* pdu, pdu_reg_data_t* reg_data)
 }
 
 bool
-pdu_parse_write_regs (modbus_pdu_t* pdu, pdu_reg_data_t* reg_data)
+pdu_parse_write_regs (modbus_pdu_t* pdu, mb_reg_data_t* reg_data)
 {
 	unsigned int i;
 	uint8_t byte_count;
@@ -93,7 +93,7 @@ pdu_parse_write_regs (modbus_pdu_t* pdu, pdu_reg_data_t* reg_data)
 		mb_debug(
 			(
 				"Ignoring Write Registers request with length mismatch, reports "
-				"%d data bytes but only %d received."
+				"%d data bytes but %d received."
 			),
 			byte_count,
 			(pdu->length - 6)
@@ -136,7 +136,7 @@ pdu_reply_exception (modbus_pdu_t* pdu, modbus_exception_t exception)
 }
 
 void
-pdu_reply_read_regs (modbus_pdu_t* pdu, pdu_reg_data_t* reg_data)
+pdu_reply_read_regs (modbus_pdu_t* pdu, mb_reg_data_t* reg_data)
 {
 	unsigned int i;
 	uint8_t byte_count;
@@ -151,8 +151,8 @@ pdu_reply_read_regs (modbus_pdu_t* pdu, pdu_reg_data_t* reg_data)
 
 	for (i = 0; i < reg_data->count; i++)
 	{
-		pdu->data[2 + i] = (uint8_t)(reg_data->data[i] >> 8);
-		pdu->data[3 + i] = (uint8_t)(reg_data->data[i] & 0xFF);
+		pdu->data[2 + (i * 2)] = (uint8_t)(reg_data->data[i] >> 8);
+		pdu->data[3 + (i * 2)] = (uint8_t)(reg_data->data[i] & 0xFF);
 	}
 
 	pdu->data[0] = MB_FN_READ_REGS;
@@ -160,7 +160,7 @@ pdu_reply_read_regs (modbus_pdu_t* pdu, pdu_reg_data_t* reg_data)
 }
 
 void
-pdu_reply_write_regs (modbus_pdu_t* pdu, pdu_reg_data_t* reg_data)
+pdu_reply_write_regs (modbus_pdu_t* pdu, mb_reg_data_t* reg_data)
 {
 	pdu->data[1] = (uint8_t)(reg_data->address >> 8);
 	pdu->data[2] = (uint8_t)(reg_data->address & 0xFF);

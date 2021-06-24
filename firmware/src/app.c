@@ -37,6 +37,8 @@ static unsigned int message_counter;
 void sw1_callback (GPIO_PIN pin, uintptr_t context);
 void sw2_callback (GPIO_PIN pin, uintptr_t context);
 void led_timer_callback (uintptr_t context);
+bool modbus_read_callback (mb_reg_data_t* reg_data);
+bool modbus_write_callback (mb_reg_data_t* reg_data);
 
 
 /// Main Functions
@@ -100,6 +102,19 @@ app_init (void)
 
 	modbus_init();
 	zl_init();
+
+	modbus_add_reg_handler(
+		0x00,
+		0x10,
+		MB_RA_READ,
+		modbus_read_callback
+	);
+	modbus_add_reg_handler(
+		0x00,
+		0x10,
+		MB_RA_WRITE,
+		modbus_write_callback
+	);
 }
 
 // Main app task. Call as often as possible.
@@ -248,4 +263,68 @@ void
 led_timer_callback (uintptr_t context)
 {
 	isr_state = APPS_INT_TOGGLE_LED;
+}
+
+// Test modbus read callback. Prints request data.
+bool
+modbus_read_callback (mb_reg_data_t* reg_data)
+{
+	unsigned int i;
+	uint16_t end_address = reg_data->address + reg_data->count - 1;
+
+	if (reg_data->address == end_address)
+	{
+		printf("Modbus Read: 0x%04X\r\n", reg_data->address);
+	}
+	else
+	{
+		printf("Modbus Read: 0x%04X - 0x%04X\r\n", reg_data->address, end_address);
+	}
+
+	for (i = 0; i < reg_data->count; i++)
+	{
+		reg_data->data[i] = i + reg_data->address;
+	}
+
+	return true;
+}
+
+// Test modbus read callback. Prints request data.
+bool
+modbus_write_callback (mb_reg_data_t* reg_data)
+{
+	uint16_t end_address = reg_data->address + reg_data->count - 1;
+
+	if (reg_data->address == end_address)
+	{
+		printf("Modbus Write: 0x%04X = 0x%04X\r\n", reg_data->address, reg_data->data[0]);
+	}
+	else
+	{
+		unsigned int i;
+
+		printf("Modbus Write: 0x%04X - 0x%04X = { ", reg_data->address, end_address);
+
+		for (i = 0; i < reg_data->count; i++)
+		{
+			if (i > 0)
+			{
+				printf(", ");
+			}
+
+			printf("0x%04X", reg_data->data[i]);
+		}
+
+		printf(" }\r\n");
+	}
+
+	if (reg_data->data[0] > 0xFF)
+	{
+		// Example of failure on data with more than 8 bits.
+		return false;
+	}
+	else
+	{
+		return true;
+	}
 }

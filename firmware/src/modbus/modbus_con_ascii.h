@@ -14,11 +14,11 @@
  *   Modbus ASCII frame/ADU interface. IO via Harmony Console.
  */
 
-#include "modbus_defs.h"
-
-
 #ifndef MODBUS_CON_ASCII_H
 #define MODBUS_CON_ASCII_H
+
+
+#include "modbus_defs.h"
 
 
 #define MCA_FRAME_MAX (252U)
