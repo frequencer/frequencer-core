@@ -123,10 +123,9 @@ bool SPI2_WriteRead(void* pTransmitData, size_t txSize, void* pReceiveData, size
 {
     size_t txCount = 0;
     size_t rxCount = 0;
-    size_t dummySize = 0;
-    uint32_t rxData, txData;
+    uint32_t rxData;
 
-    /* Verify the request */
+    // Verify the request.
     if (((txSize <= 0) || (NULL == pTransmitData)) && ((rxSize <= 0) || (NULL == pReceiveData)))
     {
 		return false;
@@ -141,61 +140,61 @@ bool SPI2_WriteRead(void* pTransmitData, size_t txSize, void* pReceiveData, size
 		rxSize = 0;
 	}
 
-	/* Clear the receive overflow error if any */
+	// Make sure the transmit buffer is empty.
+	while(!SPI2STATbits.SPITBE)
+	{
+	}
+
+	// Clear the receive overflow error, if any.
 	SPI2STATCLR = _SPI2STAT_SPIROV_MASK;
 
-	/* Flush out any unread data in SPI read buffer from the previous transfer */
-	while ((bool)(SPI2STAT & _SPI2STAT_SPIRBE_MASK) == false)
+	// Make sure the receive buffer is empty.
+	while(!SPI2STATbits.SPIRBE)
 	{
 		rxData = SPI2BUF;
 	}
 
-	if (rxSize > txSize)
-	{
-		dummySize = rxSize - txSize;
-	}
-
-	/* If dataBit size is 32 bits (not supported) */
-	if (_SPI2CON_MODE32_MASK == (SPI2CON & _SPI2CON_MODE32_MASK))
-	{
-		return false;
-	}
-	/* If dataBit size is 16 bits (not supported) */
-	else if (_SPI2CON_MODE16_MASK == (SPI2CON & _SPI2CON_MODE16_MASK))
+	// Fail when word size is not 8 bits.
+	if (SPI2CONbits.MODE16 || SPI2CONbits.MODE32)
 	{
 		return false;
 	}
 
-	/* Make sure transmit buffer is empty */
-	while((bool)(SPI2STAT & _SPI2STAT_SPITBE_MASK) == false);
-
-	while ((txCount < txSize) || (dummySize > 0))
+	// Loop until length of read and write are satisfied.
+	while ((txCount < txSize) || (rxCount < rxSize))
 	{
-
-		if (txCount < txSize)
+		// Stuff TX byte in FIFO when it's not full.
+		if (!SPI2STATbits.SPITBF)
 		{
-			txData = ((uint8_t*)pTransmitData)[txCount];
-			txCount++;
+			if (txCount < txSize)
+			{
+				SPI2BUF = ((uint8_t*)pTransmitData)[txCount];
+				txCount++;
+			}
+			else if (txCount < rxSize)
+			{
+				SPI2BUF = 0x00;
+				txCount++;
+			}
 		}
-		else
-		{
-			txData = 0xFF;
-			dummySize--;
-		}
 
-		while((bool)(SPI2STAT & _SPI2STAT_SPITBE_MASK) == false);
-		SPI2BUF = txData;
-		while((SPI2STAT & _SPI2STAT_SPIRBE_MASK) == _SPI2STAT_SPIRBE_MASK);
-		rxData = SPI2BUF;
-
-		if (rxCount < rxSize)
+		// Read RX byte from FIFO when it's not empty.
+		if (!SPI2STATbits.SPIRBE)
 		{
-			((uint8_t*)pReceiveData)[rxCount++] = rxData;
+			rxData = SPI2BUF;
+
+			if (rxCount < rxSize)
+			{
+				((uint8_t*)pReceiveData)[rxCount] = rxData;
+				rxCount++;
+			}
 		}
 	}
 
-	/* Make sure no data is pending in the shift register */
-	while ((bool)((SPI2STAT & _SPI2STAT_SRMT_MASK) == false));
+	// Make sure no data is pending in the shift register.
+	while (!SPI2STATbits.SRMT)
+	{
+	}
 
     return true;
 }
