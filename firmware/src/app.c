@@ -24,6 +24,10 @@
 
 #define MB_PLL_BASE (0x100U)
 #define MB_PLL_GPIO_BASE (0x200U)
+#define MB_DAC_RAW_BASE (0x300U)
+#define MB_DAC_MAX_WRITE MODBUS_REGS_MULTI_MAX
+
+#define DAC_I2C_ADDR (0b01100000)
 
 
 /// Definitions
@@ -45,6 +49,8 @@ bool modbus_read_pll_callback (mb_reg_data_t* reg_data);
 bool modbus_write_pll_callback (mb_reg_data_t* reg_data);
 bool modbus_read_pll_gpio_callback (mb_reg_data_t* reg_data);
 bool modbus_write_pll_gpio_callback (mb_reg_data_t* reg_data);
+bool modbus_read_dac_raw_callback (mb_reg_data_t* reg_data);
+bool modbus_write_dac_raw_callback (mb_reg_data_t* reg_data);
 
 
 /// Main Functions
@@ -141,6 +147,20 @@ app_init (void)
 		0x01,
 		MB_RA_WRITE,
 		modbus_write_pll_gpio_callback
+	);
+	// These registers can read/write registers on the DAC. Higher level driver
+	// is not yet implemented, so no protection against bad address/data.
+	modbus_add_reg_handler(
+		MB_DAC_RAW_BASE,
+		0x18,
+		MB_RA_READ,
+		modbus_read_dac_raw_callback
+	);
+	modbus_add_reg_handler(
+		MB_DAC_RAW_BASE,
+		MB_DAC_MAX_WRITE,
+		MB_RA_WRITE,
+		modbus_write_dac_raw_callback
 	);
 }
 
@@ -472,6 +492,84 @@ modbus_write_pll_gpio_callback (mb_reg_data_t* reg_data)
 	{
 		PLL_GPO2_OutputEnable();
 		GPIO_PinWrite(PLL_GPO2_PIN, in.pll.gpo2_val);
+	}
+
+	return true;
+}
+
+// Read from DAC over I2C directly.
+// One modbus address = one byte.
+// All DAC bytes are read every time due to the interface design.
+// See MCP4728 DS Figure 5-15 for data organization.
+bool
+modbus_read_dac_raw_callback (mb_reg_data_t* reg_data)
+{
+	uint8_t i2c_in[24] = { 0 };
+	uint8_t bytes = 24;
+	uint8_t i;
+
+	while (I2C5_IsBusy())
+	{
+	}
+
+	if (!I2C5_Read(DAC_I2C_ADDR, i2c_in, bytes))
+	{
+		HANG_HERE();
+	}
+
+	while (I2C5_IsBusy())
+	{
+	}
+
+	for (i = 0; i < reg_data->count; i++)
+	{
+		reg_data->data[i] = i2c_in[i + (reg_data->address - MB_DAC_RAW_BASE)];
+	}
+
+	return true;
+}
+
+// Write to DAC over I2C directly.
+// One modbus address = one byte. Modbus register values above 255 will be
+// rejected.
+// Start address must be equal to MB_DAC_RAW_BASE. Data will be written exactly
+// as sent, for as many bytes as specified in the multi-register write, up to
+// MB_DAC_MAX_WRITE. Device address is added automatically, other than that,
+// write type and structure is defined by the user.
+// Example: Write { 0x005E, 0x0093, 0x00E8 } sets channel D to 1.0V.
+bool
+modbus_write_dac_raw_callback (mb_reg_data_t* reg_data)
+{
+	uint8_t i2c_out[MB_DAC_MAX_WRITE] = { 0 };
+	uint8_t bytes = reg_data->count;
+	uint8_t i;
+
+	if (reg_data->address != MB_DAC_RAW_BASE)
+	{
+		return false;
+	}
+
+	for (i = 0; i < reg_data->count; i++)
+	{
+		if (reg_data->data[i] > 0xFF)
+		{
+			return false;
+		}
+
+		i2c_out[i] = reg_data->data[i];
+	}
+
+	while (I2C5_IsBusy())
+	{
+	}
+
+	if (!I2C5_Write(DAC_I2C_ADDR, i2c_out, bytes))
+	{
+		HANG_HERE();
+	}
+
+	while (I2C5_IsBusy())
+	{
 	}
 
 	return true;
