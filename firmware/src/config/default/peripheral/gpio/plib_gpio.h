@@ -249,6 +249,7 @@
 #define PLL_GPO6_OutputEnable()      (TRISFCLR = (1<<0))
 #define PLL_GPO6_InputEnable()       (TRISFSET = (1<<0))
 #define PLL_GPO6_Get()               ((PORTF >> 0) & 0x1)
+#define PLL_GPO6_Direction()         ((TRISF >> 0) & 0x1)
 #define PLL_GPO6_PIN                  GPIO_PIN_RF0
 
 /*** Macros for PLL_GPO2 pin ***/
@@ -258,6 +259,7 @@
 #define PLL_GPO2_OutputEnable()      (TRISFCLR = (1<<1))
 #define PLL_GPO2_InputEnable()       (TRISFSET = (1<<1))
 #define PLL_GPO2_Get()               ((PORTF >> 1) & 0x1)
+#define PLL_GPO2_Direction()         ((TRISF >> 1) & 0x1)
 #define PLL_GPO2_PIN                  GPIO_PIN_RF1
 
 /*** Macros for PMD0 pin ***/

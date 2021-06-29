@@ -23,7 +23,7 @@
 
 
 #define MB_PLL_BASE (0x100U)
-#define MB_PLL_RAW_BASE (0x200U)
+#define MB_PLL_GPIO_BASE (0x200U)
 
 
 /// Definitions
@@ -43,8 +43,8 @@ void sw2_callback (GPIO_PIN pin, uintptr_t context);
 void led_timer_callback (uintptr_t context);
 bool modbus_read_pll_callback (mb_reg_data_t* reg_data);
 bool modbus_write_pll_callback (mb_reg_data_t* reg_data);
-bool modbus_read_pll_raw_callback (mb_reg_data_t* reg_data);
-bool modbus_write_pll_raw_callback (mb_reg_data_t* reg_data);
+bool modbus_read_pll_gpio_callback (mb_reg_data_t* reg_data);
+bool modbus_write_pll_gpio_callback (mb_reg_data_t* reg_data);
 
 
 /// Main Functions
@@ -114,8 +114,7 @@ app_init (void)
 	// Note that we go by ADDRESSES always, not register numbers. If you have
 	// to use a "number" add one to the address.
 	// Also note that ONLY 123 registers can be read/written at once. This is
-	// the Modbus spec... we can probably crank that as high as we want though
-	// without much issue (adjust MODBUS_REGS_MULTI_MAX).
+	// the Modbus spec.
 	// Oh, and the responses aren't going to have the LRC set because I didn't
 	// implement it, so ignore that.
 	modbus_add_reg_handler(
@@ -130,19 +129,18 @@ app_init (void)
 		MB_RA_WRITE,
 		modbus_write_pll_callback
 	);
-	// The raw reading/writing really screws with the PLL. Seems the burst mode
-	// can't handle passing over an unimplemented address..?
+	// This register lets you read/write the GPIO and reset line of the PLL.
 	modbus_add_reg_handler(
-		MB_PLL_RAW_BASE,  // Or add this constant to do direct SPI transactions.
-		0x80,
+		MB_PLL_GPIO_BASE,
+		0x01,
 		MB_RA_READ,
-		modbus_read_pll_raw_callback
+		modbus_read_pll_gpio_callback
 	);
 	modbus_add_reg_handler(
-		MB_PLL_RAW_BASE,
-		0x80,
+		MB_PLL_GPIO_BASE,
+		0x01,
 		MB_RA_WRITE,
-		modbus_write_pll_raw_callback
+		modbus_write_pll_gpio_callback
 	);
 }
 
@@ -408,56 +406,72 @@ modbus_write_pll_callback (mb_reg_data_t* reg_data)
 	return true;
 }
 
-// Read from PLL over SPI directly, bypassing PIC's driver.
-// One modbus address = one byte.
+// Write PLL GPIO input, and direction.
+// Implements a single address. Upper byte is direction (0 = out), lower byte
+// is GPIO input value (1 = high) regardless of direction. Input value should
+// match what latch is set to unless there's a short circuit or something.
+// Bit 15/7 is PLL_RST.
+// Bit 14/6 is PLL_GPO6.
+// Bit 10/2 is PLL_GPO2.
+// Other bits direction/value is undefined.
 bool
-modbus_read_pll_raw_callback (mb_reg_data_t* reg_data)
+modbus_read_pll_gpio_callback (mb_reg_data_t* reg_data)
 {
-	uint8_t spi_out[1] = { 0 };
-	uint8_t spi_in[MODBUS_REGS_MULTI_MAX + 1] = { 0 };
-	uint8_t bytes = reg_data->count + 1;
-	uint8_t i;
+	app_pll_gpio_t out = { .word = 0 };
 
-	spi_out[0] = ((reg_data->address - MB_PLL_RAW_BASE) & 0x7F) | 0x80;
+	out.pll.rst_dir = 0;
+	out.pll.gpo6_dir = PLL_GPO6_Direction();
+	out.pll.gpo2_dir = PLL_GPO2_Direction();
+	out.pll.rst_val = PLL_RST_Get();
+	out.pll.gpo6_val = PLL_GPO6_Get();
+	out.pll.gpo2_val = PLL_GPO2_Get();
 
-	if (!SPI2_WriteRead((void*)spi_out, 1U, (void*)spi_in, bytes))
-	{
-		HANG_HERE();
-	}
-
-	for (i = 0; i < reg_data->count; i++)
-	{
-		reg_data->data[i] = spi_in[i + 1];
-	}
+	reg_data->data[0] = out.word;
 
 	return true;
 }
 
-// Write to PLL over SPI directly, bypassing PIC's driver.
-// One modbus address = one byte. Modbus register values above 255 will be
-// rejected.
+// Write PLL GPIO latch and direction.
+// Implements a single address. Upper byte is direction (0 = out), lower byte
+// is output latch (1 = high). Direction is processed before latch. Latch is
+// ignored for bits with direction = 0.
+// Bit 15/7 is PLL_RST. Reset direction (bit 15) cannot be set to input/1.
+// Bit 14/6 is PLL_GPO6.
+// Bit 10/2 is PLL_GPO2.
+// If reset latch is set low, and reset direction is set out in same write,
+// then PLL reset sequence will happen. Otherwise reset pin will actually be
+// high (not-reset state). No need to set reset high again manually.
+// Other bits direction/latch is ignored.
 bool
-modbus_write_pll_raw_callback (mb_reg_data_t* reg_data)
+modbus_write_pll_gpio_callback (mb_reg_data_t* reg_data)
 {
-	uint8_t spi_out[MODBUS_REGS_MULTI_MAX + 1] = { 0 };
-	uint8_t bytes = reg_data->count + 1;
-	uint8_t i;
+	app_pll_gpio_t in;
 
-	spi_out[0] = ((reg_data->address - MB_PLL_RAW_BASE) & 0x7F);
+	in.word = reg_data->data[0];
 
-	for (i = 0; i < reg_data->count; i++)
+	if (!in.pll.rst_dir && !in.pll.rst_val)
 	{
-		if (reg_data->data[i] > 0xFF)
-		{
-			return false;
-		}
-
-		spi_out[i + 1] = reg_data->data[i];
+		zl_init();
 	}
 
-	if (!SPI2_WriteRead((void*)spi_out, bytes, NULL, 0U))
+	if (in.pll.gpo6_dir)
 	{
-		HANG_HERE();
+		PLL_GPO6_InputEnable();
+	}
+	else
+	{
+		PLL_GPO6_OutputEnable();
+		GPIO_PinWrite(PLL_GPO6_PIN, in.pll.gpo6_val);
+	}
+
+	if (in.pll.gpo2_dir)
+	{
+		PLL_GPO2_InputEnable();
+	}
+	else
+	{
+		PLL_GPO2_OutputEnable();
+		GPIO_PinWrite(PLL_GPO2_PIN, in.pll.gpo2_val);
 	}
 
 	return true;

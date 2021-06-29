@@ -49,6 +49,27 @@ typedef enum
 app_states_t;
 
 
+typedef union
+{
+	struct
+	{
+		unsigned int _s0 : 2;
+		unsigned int gpo2_val : 1;
+		unsigned int _s1 : 3;
+		unsigned int gpo6_val : 1;
+		unsigned int rst_val : 1;
+		unsigned int _s2 : 2;
+		unsigned int gpo2_dir : 1;
+		unsigned int _s3 : 3;
+		unsigned int gpo6_dir : 1;
+		unsigned int rst_dir : 1;
+	}
+	pll;
+	uint16_t word;
+}
+app_pll_gpio_t;
+
+
 void app_init (void);
 
 void app_task (void);
