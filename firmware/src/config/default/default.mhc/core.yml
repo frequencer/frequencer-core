@@ -2637,20 +2637,6 @@ children:
       children:
       - type: Dynamic
         attributes: {id: core, value: 'true'}
-  - type: String
-    attributes: {id: TIMER_1_INTERRUPT_HANDLER}
-    children:
-    - type: Values
-      children:
-      - type: Dynamic
-        attributes: {id: tmr1, value: TIMER_1_Handler}
-  - type: Boolean
-    attributes: {id: TIMER_1_INTERRUPT_HANDLER_LOCK}
-    children:
-    - type: Values
-      children:
-      - type: Dynamic
-        attributes: {id: tmr1, value: 'false'}
   - type: Boolean
     attributes: {id: TMR1_CLOCK_ENABLE}
     children:

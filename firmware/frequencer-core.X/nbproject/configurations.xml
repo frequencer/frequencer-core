@@ -89,10 +89,6 @@
                 <itemPath>../src/config/default/peripheral/spi/spi_master/plib_spi2_master.h</itemPath>
               </logicalFolder>
             </logicalFolder>
-            <logicalFolder name="f9" displayName="tmr1" projectFiles="true">
-              <itemPath>../src/config/default/peripheral/tmr1/plib_tmr1_common.h</itemPath>
-              <itemPath>../src/config/default/peripheral/tmr1/plib_tmr1.h</itemPath>
-            </logicalFolder>
             <logicalFolder name="f5" displayName="uart" projectFiles="true">
               <itemPath>../src/config/default/peripheral/uart/plib_uart_common.h</itemPath>
               <itemPath>../src/config/default/peripheral/uart/plib_uart6.h</itemPath>
@@ -148,6 +144,7 @@
         <itemPath>../src/drivers/hang_here.h</itemPath>
         <itemPath>../src/drivers/zl30159.h</itemPath>
         <itemPath>../src/drivers/zl30159_defs.h</itemPath>
+        <itemPath>../src/drivers/counter.h</itemPath>
       </logicalFolder>
       <logicalFolder name="f3" displayName="modbus" projectFiles="true">
         <itemPath>../src/modbus/modbus.h</itemPath>
@@ -213,9 +210,6 @@
                 <itemPath>../src/config/default/peripheral/spi/spi_master/plib_spi2_master.c</itemPath>
               </logicalFolder>
             </logicalFolder>
-            <logicalFolder name="f9" displayName="tmr1" projectFiles="true">
-              <itemPath>../src/config/default/peripheral/tmr1/plib_tmr1.c</itemPath>
-            </logicalFolder>
             <logicalFolder name="f5" displayName="uart" projectFiles="true">
               <itemPath>../src/config/default/peripheral/uart/plib_uart6.c</itemPath>
             </logicalFolder>
@@ -255,6 +249,7 @@
       <logicalFolder name="f2" displayName="drivers" projectFiles="true">
         <itemPath>../src/drivers/zl30159.c</itemPath>
         <itemPath>../src/drivers/zl30159_defs.c</itemPath>
+        <itemPath>../src/drivers/counter.c</itemPath>
       </logicalFolder>
       <logicalFolder name="f3" displayName="modbus" projectFiles="true">
         <itemPath>../src/modbus/modbus.c</itemPath>
@@ -284,7 +279,6 @@
         <itemPath>../src/config/default/default.mhc/stdio.yml</itemPath>
         <itemPath>../src/config/default/default.mhc/sys_console.yml</itemPath>
         <itemPath>../src/config/default/default.mhc/sys_time.yml</itemPath>
-        <itemPath>../src/config/default/default.mhc/tmr1.yml</itemPath>
         <itemPath>../src/config/default/default.mhc/uart6.yml</itemPath>
         <itemPath>../src/config/default/default.mhc/usb_device.yml</itemPath>
         <itemPath>../src/config/default/default.mhc/usb_device_cdc.yml</itemPath>

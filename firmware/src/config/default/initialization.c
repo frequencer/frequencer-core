@@ -299,8 +299,6 @@ void SYS_Initialize ( void* data )
 
     I2C5_Initialize();
 
-    TMR1_Initialize();
-
 	SPI2_Initialize();
 
     PMP_Initialize();

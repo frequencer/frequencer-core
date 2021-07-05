@@ -63,7 +63,6 @@
 #include "driver/usb/usbhs/drv_usbhs.h"
 #include "peripheral/adchs/plib_adchs.h"
 #include "peripheral/i2c/master/plib_i2c5_master.h"
-#include "peripheral/tmr1/plib_tmr1.h"
 #include "system/console/sys_console.h"
 #include "system/console/src/sys_console_usb_cdc_definitions.h"
 #include "peripheral/spi/spi_master/plib_spi2_master.h"
