@@ -36,4 +36,4 @@ uint32_t counter_freq_hz (void);  // return of zero is no frequency available
 }
 #endif
 
-#endif  /* COUNTER_H */
+#endif /* COUNTER_H */

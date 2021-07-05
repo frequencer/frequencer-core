@@ -15,6 +15,7 @@
 *******************************************************************************/
 
 #include "definitions.h"
+#include "drivers/counter.h"
 #include "drivers/hang_here.h"
 #include "drivers/zl30159.h"
 #include "modbus/modbus.h"
@@ -114,6 +115,7 @@ app_init (void)
 
 	modbus_init();
 	zl_init();
+	counter_init();
 
 	// PLL can be accessed via Read Holding Registers (0x03) and Write Multiple
 	// Registers (0x10) Modbus functions in ASCII frame format over USB serial.
@@ -265,6 +267,7 @@ app_task (void)
 	{
 		// General tasks for after init.
 		modbus_task();
+		counter_task();
 	}
 }
 

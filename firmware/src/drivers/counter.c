@@ -22,13 +22,13 @@
 void
 counter_init (void)
 {
-	
+
 }
 
 void
 counter_task (void)
 {
-	
+
 }
 
 

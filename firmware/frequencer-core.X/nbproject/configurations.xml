@@ -145,6 +145,7 @@
         <itemPath>../src/drivers/zl30159.h</itemPath>
         <itemPath>../src/drivers/zl30159_defs.h</itemPath>
         <itemPath>../src/drivers/counter.h</itemPath>
+        <itemPath>../src/drivers/sw_timer.h</itemPath>
       </logicalFolder>
       <logicalFolder name="f3" displayName="modbus" projectFiles="true">
         <itemPath>../src/modbus/modbus.h</itemPath>
@@ -250,6 +251,7 @@
         <itemPath>../src/drivers/zl30159.c</itemPath>
         <itemPath>../src/drivers/zl30159_defs.c</itemPath>
         <itemPath>../src/drivers/counter.c</itemPath>
+        <itemPath>../src/drivers/sw_timer.c</itemPath>
       </logicalFolder>
       <logicalFolder name="f3" displayName="modbus" projectFiles="true">
         <itemPath>../src/modbus/modbus.c</itemPath>
