@@ -27,45 +27,38 @@ sw_timer_elapsed (sw_timer_t* timer)
 	// On the PIC32MZ this is atomic
 	uint32_t local_ticks = sw_timer_time();
 
-	if (timer->pause > 0)
+	if (!(timer->running))
 	{
-		local_ticks = timer->pause;
+		local_ticks = timer->_pause;
 	}
 
-	if (local_ticks >= timer->start)
+	if (local_ticks >= timer->_start)
 	{
-		return local_ticks - timer->start;
+		return local_ticks - timer->_start;
 	}
 	else
 	{
-		return SWT_ROLLOVER_MS - timer->start - local_ticks;
+		return SWT_ROLLOVER_MS - timer->_start - local_ticks;
 	}
 }
 
-bool
-sw_timer_expired (sw_timer_t* timer)
-{
-	return sw_timer_elapsed(timer) > timer->length;
-}
-
-void
-sw_timer_reset (sw_timer_t* timer)
-{
-	timer->start = sw_timer_time();
-	timer->pause = 0;
-}
-
-void
-sw_timer_pause (sw_timer_t* timer)
+uint32_t
+ns_timer_elapsed (ns_timer_t* timer)
 {
 	// On the PIC32MZ this is atomic
-	uint32_t local_ticks = sw_timer_time();
+	uint32_t local_ticks = ns_timer_time();
 
-	if (0 == local_ticks)
+	if (!(timer->running))
 	{
-		// Small chance of being off by 1ms... it's fine
-		local_ticks++;
+		local_ticks = timer->_pause;
 	}
 
-	timer->pause = local_ticks;
+	if (local_ticks >= timer->_start)
+	{
+		return local_ticks - timer->_start;
+	}
+	else
+	{
+		return UINT32_MAX - timer->_start - local_ticks;
+	}
 }
