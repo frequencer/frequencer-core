@@ -17,6 +17,7 @@
 #include "definitions.h"
 #include "drivers/counter.h"
 #include "drivers/hang_here.h"
+#include "drivers/mcp4728.h"
 #include "drivers/zl30159.h"
 #include "modbus/modbus.h"
 
@@ -27,8 +28,6 @@
 #define MB_PLL_GPIO_BASE (0x200U)
 #define MB_DAC_RAW_BASE (0x300U)
 #define MB_DAC_MAX_WRITE MODBUS_REGS_MULTI_MAX
-
-#define DAC_I2C_ADDR (0b01100000)
 
 
 /// Definitions
@@ -216,6 +215,21 @@ app_task (void)
 				printf("PLL not ready. Press S2 to retry.\r\n");
 				next_state = APPS_WAIT_USER_READY;
 			}
+
+			zl_value_t hp_cmos_en = { .hp_cmos_en = { .hpout0 = 1, .hpout1 = 1 } };
+
+			zl_write_reg(ZL_REG_HP_CMOS_EN, hp_cmos_en);
+
+			zl_value_t xo_sel = { .bool_ = true };
+
+			zl_write_reg(ZL_REG_XO_OR_CRYSTAL_SEL, xo_sel);
+
+			zl_value_t central_freq_offset = { .i32 = 178956971 };
+
+			zl_write_reg(ZL_REG_CENTRAL_FREQ_OFFSET, central_freq_offset);
+
+			dac_set(DAC_VO1, 3.3);
+			dac_set(DAC_VO2, 3.3);
 
 			break;
 		}

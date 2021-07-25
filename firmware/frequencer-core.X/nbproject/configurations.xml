@@ -146,6 +146,7 @@
         <itemPath>../src/drivers/zl30159_defs.h</itemPath>
         <itemPath>../src/drivers/counter.h</itemPath>
         <itemPath>../src/drivers/sw_timer.h</itemPath>
+        <itemPath>../src/drivers/mcp4728.h</itemPath>
       </logicalFolder>
       <logicalFolder name="f3" displayName="modbus" projectFiles="true">
         <itemPath>../src/modbus/modbus.h</itemPath>
@@ -252,6 +253,7 @@
         <itemPath>../src/drivers/zl30159_defs.c</itemPath>
         <itemPath>../src/drivers/counter.c</itemPath>
         <itemPath>../src/drivers/sw_timer.c</itemPath>
+        <itemPath>../src/drivers/mcp4728.c</itemPath>
       </logicalFolder>
       <logicalFolder name="f3" displayName="modbus" projectFiles="true">
         <itemPath>../src/modbus/modbus.c</itemPath>
@@ -620,8 +622,6 @@
         <property key="memories.programmemory" value="true"/>
         <property key="memories.programmemory.ranges" value="1d000000-1d0fffff"/>
         <property key="memories.rww" value="true"/>
-        <property key="programmerToGoFilePath"
-                  value="C:/Users/jrowley/Documents/git/frequencer-core/firmware/frequencer-core.X/debug/default/frequencer-core_ptg"/>
         <property key="programoptions.donoteraseauxmem" value="false"/>
         <property key="programoptions.eraseb4program" value="true"/>
         <property key="programoptions.pgmentry.voltage" value="low"/>

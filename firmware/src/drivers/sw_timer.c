@@ -42,23 +42,33 @@ sw_timer_elapsed (sw_timer_t* timer)
 	}
 }
 
-uint32_t
+double
 ns_timer_elapsed (ns_timer_t* timer)
 {
 	// On the PIC32MZ this is atomic
-	uint32_t local_ticks = ns_timer_time();
+	uint32_t local_ticks = sw_timer_ticks();
 
 	if (!(timer->running))
 	{
 		local_ticks = timer->_pause;
 	}
 
-	if (local_ticks >= timer->_start)
+	return ns_time_delta(timer->_start, local_ticks);
+}
+
+double
+ns_time_delta (uint32_t ticks_start, uint32_t ticks_end)
+{
+	uint32_t delta_ticks;
+
+	if (ticks_end >= ticks_start)
 	{
-		return local_ticks - timer->_start;
+		delta_ticks = ticks_end - ticks_start;
 	}
 	else
 	{
-		return UINT32_MAX - timer->_start - local_ticks;
+		delta_ticks = UINT32_MAX - ticks_start - ticks_end;
 	}
+
+	return delta_ticks / SWT_COUNTS_NS;
 }
