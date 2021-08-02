@@ -18,6 +18,13 @@
 #define COUNTER_H
 
 
+#define PR1_MIN (1U)
+#define PR1_MAX (65535U)
+
+#define TIMEOUT_MIN (100U)  // ms
+#define TIMEOUT_MAX (4000U)  // ms
+
+
 #ifdef __cplusplus
 extern "C" {
 #endif
