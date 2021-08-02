@@ -89,6 +89,22 @@ void CLK_Initialize( void )
     SYSKEY = 0xAA996655;
     SYSKEY = 0x556699AA;
 
+    /* Peripheral Bus 3 is by default enabled, set its divisor */
+    PB3DIVbits.PBDIV = 0;
+
+    /* Peripheral Bus 4 is by default enabled, set its divisor */
+    PB4DIVbits.PBDIV = 0;
+
+
+    /* Set up Reference Clock 4 */
+    /* REFO4CON register */
+    /* ROSEL =  SYSCLK */
+    /* DIVSWEN = 1 */
+    /* RODIV = 1 */
+    REFO4CON = 0x10200;
+
+    /* Enable oscillator (ON bit) and Enable Output (OE bit) */
+    REFO4CONSET = 0x00001000 | 0x00008000;
 
   
 

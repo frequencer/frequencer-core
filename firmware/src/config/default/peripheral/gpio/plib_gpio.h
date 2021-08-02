@@ -148,6 +148,10 @@
 #define FE_DC_Get()               ((PORTB >> 8) & 0x1)
 #define FE_DC_PIN                  GPIO_PIN_RB8
 
+/*** Macros for PIC_X1 pin ***/
+#define PIC_X1_Get()               ((PORTB >> 10) & 0x1)
+#define PIC_X1_PIN                  GPIO_PIN_RB10
+
 /*** Macros for SW1 pin ***/
 #define SW1_Set()               (LATBSET = (1<<11))
 #define SW1_Clear()             (LATBCLR = (1<<11))
@@ -192,6 +196,10 @@
 /*** Macros for X20_PIC pin ***/
 #define X20_PIC_Get()               ((PORTC >> 12) & 0x1)
 #define X20_PIC_PIN                  GPIO_PIN_RC12
+
+/*** Macros for UI_X1 pin ***/
+#define UI_X1_Get()               ((PORTC >> 15) & 0x1)
+#define UI_X1_PIN                  GPIO_PIN_RC15
 
 /*** Macros for USBID pin ***/
 #define USBID_Get()               ((PORTF >> 3) & 0x1)

@@ -100,6 +100,7 @@ void GPIO_Initialize ( void )
     RPD1R = 4;
     RPG8R = 6;
     RPG9R = 6;
+    RPB10R = 13;
 
     /* Lock back the system after PPS configuration */
     CFGCONbits.IOLOCK = 1;
